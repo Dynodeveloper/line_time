@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mi Odisea en Sistemas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{ --black:#000; --white:#fff; --red:#ff0000; --yellow:#ffd800; --gold:#ffea4d;
+  --gray:#8a8a8a; --dim:#3a3a3a; --px:4px; --maxw:880px; }
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{ margin:0; padding:0; background:var(--black); color:var(--white);
+  font-family:'DotGothic16',monospace; font-size:22px; line-height:1.4;
+  image-rendering:pixelated; -webkit-font-smoothing:none; overflow-x:hidden; }
+body::before{ content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.35;
+  background-image:
+    radial-gradient(1px 1px at 16% 20%,#fff 99%,transparent),
+    radial-gradient(1px 1px at 72% 28%,#fff 99%,transparent),
+    radial-gradient(1px 1px at 40% 76%,#fff 99%,transparent),
+    radial-gradient(1px 1px at 86% 66%,#fff 99%,transparent),
+    radial-gradient(1px 1px at 8% 60%,#fff 99%,transparent); }
+.wrap{ max-width:var(--maxw); margin:0 auto; padding:0 20px; position:relative; z-index:1; }
+h1,h2,.pixel{ font-family:'Press Start 2P',monospace; line-height:1.6; }
+.box{ background:var(--black); border:var(--px) solid var(--white); }
+
+.hud{ position:sticky; top:0; z-index:70; background:var(--black); border-bottom:3px solid var(--white); }
+.hud-inner{ max-width:var(--maxw); margin:0 auto; padding:10px 20px; display:flex; align-items:center; gap:14px; }
+.hud-logo{ font-family:'Press Start 2P'; font-size:10px; flex:1; }
+.hud-logo .h{ color:var(--red); }
+.iconbtn{ font-family:'Press Start 2P'; font-size:9px; color:var(--white); background:var(--black); border:3px solid var(--white); padding:8px 9px; cursor:pointer; }
+.iconbtn:hover{ background:var(--white); color:var(--black); }
+.iconbtn:focus-visible{ outline:3px solid var(--yellow); outline-offset:2px; }
+
+.hero{ text-align:center; padding:60px 20px 26px; position:relative; z-index:1; }
+.hero h1{ font-size:clamp(16px,5vw,32px); margin:0; }
+.hero .soul-title{ display:inline-block; vertical-align:-4px; margin:0 4px; }
+.player-name{ font-family:'Press Start 2P'; font-size:11px; color:var(--yellow); margin:24px 0 8px; }
+.player-role{ font-size:21px; color:var(--gray); }
+.start-btn{ font-family:'Press Start 2P'; font-size:11px; color:var(--white); background:var(--black);
+  border:3px solid var(--white); padding:14px 18px; cursor:pointer; margin-top:22px; }
+.start-btn:hover{ background:var(--yellow); color:var(--black); border-color:var(--yellow); }
+.start-btn:focus-visible{ outline:3px solid var(--yellow); outline-offset:4px; }
+.hero-hint{ font-size:16px; color:var(--dim); margin-top:16px; }
+.hero-hint kbd{ font-family:'Press Start 2P'; font-size:9px; border:2px solid var(--gray); padding:3px 5px; color:var(--gray); }
+
+/* ===== OVERWORLD (Frisk camina) ===== */
+.ow-head{ text-align:center; margin:8px 0 0; }
+.ow-head h2{ font-size:12px; }
+.ow-head p{ color:var(--gray); font-size:17px; margin:6px 0 0; }
+.overworld{ position:relative; max-width:var(--maxw); margin:16px auto 0; height:300px;
+  border:3px solid var(--white); overflow:hidden; background:#020207; }
+.world{ position:absolute; top:0; left:0; height:100%; will-change:transform; }
+.ground{ position:absolute; left:0; right:0; bottom:64px; height:3px; background:var(--dim); }
+#frisk{ position:absolute; bottom:64px; transform-origin:center bottom; }
+.marker{ position:absolute; bottom:67px; text-align:center; transform:translateX(-50%); }
+.marker .star{ }
+.marker .mlabel{ font-family:'Press Start 2P'; font-size:8px; color:var(--gray); margin-top:4px; white-space:nowrap; }
+.marker.on .mlabel{ color:var(--yellow); }
+.door{ position:absolute; bottom:67px; transform:translateX(-50%); text-align:center; }
+.door .dlabel{ font-family:'Press Start 2P'; font-size:8px; color:var(--gold); margin-top:4px; white-space:nowrap; animation:blink 1s steps(2) infinite; }
+.ow-hint{ text-align:center; color:var(--dim); font-size:15px; margin:8px 0 0; }
+
+/* ===== caja de texto inferior compartida ===== */
+.textbox{ position:fixed; left:0; right:0; bottom:0; z-index:75; background:var(--black); padding:12px 14px; }
+.textbox-inner{ max-width:var(--maxw); margin:0 auto; border:var(--px) solid var(--white); padding:12px 16px; display:flex; gap:14px; align-items:flex-start; }
+.tb-portrait{ flex:0 0 52px; width:52px; height:52px; display:grid; place-items:center; border:3px solid var(--white); }
+.tb-main{ flex:1; min-width:0; }
+.tb-name{ font-family:'Press Start 2P'; font-size:10px; color:var(--yellow); margin-bottom:6px; }
+.tb-text{ font-size:22px; min-height:2.6em; white-space:pre-line; }
+.tb-text .caret{ animation:blink 1s steps(2) infinite; }
+@keyframes blink{ 50%{opacity:0} }
+
+/* ===== controles tactiles ===== */
+.touch{ position:fixed; bottom:120px; left:0; right:0; z-index:210; display:none; justify-content:space-between;
+  padding:0 16px; pointer-events:none; }
+.touch .pad,.touch .act{ pointer-events:auto; display:flex; gap:8px; }
+.tbtn{ width:54px; height:54px; font-family:'Press Start 2P'; font-size:14px; color:var(--white);
+  background:rgba(0,0,0,.6); border:3px solid var(--white); display:grid; place-items:center; user-select:none; }
+.tbtn:active{ background:var(--yellow); color:var(--black); }
+@media (pointer:coarse){ .touch{ display:flex; } }
+
+/* ===== cierre ===== */
+.life{ margin:36px auto 8px; padding:24px; }
+.life h2{ font-size:11px; color:var(--yellow); margin-top:0; }
+.life p{ font-size:21px; }
+.life .small{ color:var(--gray); font-size:17px; }
+.foot{ text-align:center; color:var(--dim); font-size:15px; padding:20px 18px 150px; }
+.foot .pixel{ font-size:8px; color:var(--gray); }
+
+/* ===== BATALLA ===== */
+.battle{ position:fixed; inset:0; z-index:200; background:#000; display:none; flex-direction:column;
+  align-items:center; justify-content:flex-start; padding:18px 14px; }
+.battle.show{ display:flex; }
+.bt-enemy{ margin-top:6px; text-align:center; }
+.bt-enemy .ename{ font-family:'Press Start 2P'; font-size:10px; color:var(--gray); margin-top:8px; }
+.bt-bars{ display:flex; gap:18px; align-items:center; margin:12px 0 4px; font-family:'Press Start 2P'; font-size:9px; flex-wrap:wrap; justify-content:center; }
+.bt-bars .bar{ width:120px; height:14px; border:3px solid var(--white); position:relative; background:#300; }
+.bt-bars .bar.mercy{ background:#103000; }
+.bt-bars .bar > i{ position:absolute; inset:0; background:var(--yellow); }
+.bt-bars .bar.mercy > i{ background:var(--gold); }
+.bt-stage{ width:100%; max-width:520px; margin:8px auto; }
+.bt-dialog{ border:var(--px) solid var(--white); padding:12px 14px; min-height:90px; font-size:21px; white-space:pre-line; }
+.bt-dialog .caret{ animation:blink 1s steps(2) infinite; }
+#btcanvas{ display:none; width:100%; max-width:520px; border:var(--px) solid var(--white); background:#000; image-rendering:pixelated; touch-action:none; }
+.bt-menu{ display:flex; gap:10px; margin:14px auto 0; flex-wrap:wrap; justify-content:center; max-width:520px; }
+.bt-btn{ position:relative; font-family:'Press Start 2P'; font-size:11px; color:var(--gold); background:#000;
+  border:3px solid var(--gold); padding:11px 14px 11px 30px; cursor:pointer; }
+.bt-btn.active{ color:#000; background:var(--gold); }
+.bt-btn.lit{ box-shadow:0 0 0 2px var(--gold); }
+.bt-btn:focus-visible{ outline:3px solid var(--yellow); }
+.bt-btn .ico{ position:absolute; left:7px; top:50%; transform:translateY(-50%); display:none; }
+.bt-btn.active .ico{ display:block; }
+.bt-tip{ color:var(--dim); font-size:15px; margin-top:12px; text-align:center; }
+
+@media (max-width:680px){
+  body{ font-size:20px; }
+  .overworld{ height:240px; }
+  .tb-portrait{ display:none; }
+  .foot{ padding-bottom:160px; }
+}
+@media (prefers-reduced-motion:reduce){ *{ animation:none !important; } }
+</style>
+</head>
+<body>
+
+<header class="hud">
+  <div class="hud-inner">
+    <span class="hud-logo"><span class="h">♥</span> mi odisea</span>
+    <button class="iconbtn" id="muteBtn" aria-label="Sonido">♪ ON</button>
+    <button class="iconbtn" id="topBtn" aria-label="Inicio">⌂</button>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <h1>MI ODISEA <span class="soul-title" id="titleSoul"></span> EN SISTEMAS</h1>
+  <!-- 👇 EDITA TU NOMBRE -->
+  <div class="player-name">TU&nbsp;NOMBRE&nbsp;AQUÍ</div>
+  <div class="player-role">Ya programo. Ahora quiero entender el resto.</div>
+  <button class="start-btn" id="startBtn">❤ EMPEZAR</button>
+  <p class="hero-hint">Camina con <kbd>←</kbd><kbd>→</kbd> · habla/avanza con <kbd>Z</kbd></p>
+</section>
+
+<main class="wrap">
+  <div class="ow-head">
+    <h2>el camino</h2>
+    <p>Camina por cada etapa. Al final del pasillo hay alguien esperando...</p>
+  </div>
+  <div class="overworld" id="overworld">
+    <div class="world" id="world">
+      <div class="ground"></div>
+    </div>
+  </div>
+  <p class="ow-hint">← → para caminar &nbsp;·&nbsp; llega a la PUERTA del final</p>
+</main>
+
+<section class="wrap">
+  <div class="life box">
+    <h2>a dónde voy</h2>
+    <p>Ya sé hacer que el código funcione. Lo que me falta, y lo que más me llama,
+       es entender cómo encaja todo junto: las personas, los datos, las otras áreas.
+       No quiero quedarme solo en teclear.</p>
+    <p>Más que ir rápido, quiero que lo que hago sirva: usar la tecnología para
+       ayudar y aportar algo. Por eso ando metido en OSINT, GIS y todo lo que me
+       deje entender mejor el mundo.</p>
+    <p class="small">▸ Cambia este texto por el tuyo para personalizar la entrega.</p>
+  </div>
+</section>
+
+<footer class="foot">
+  <p class="pixel">FIN · por ahora</p>
+  <p>HTML · CSS · JavaScript</p>
+</footer>
+
+<!-- caja de texto inferior (overworld) -->
+<aside class="textbox" id="textbox" aria-live="polite">
+  <div class="textbox-inner">
+    <div class="tb-portrait" id="tbPortrait"></div>
+    <div class="tb-main">
+      <div class="tb-name" id="tbName">*</div>
+      <p class="tb-text" id="tbText"></p>
+    </div>
+  </div>
+</aside>
+
+<!-- controles tactiles -->
+<div class="touch" id="touch" aria-hidden="true">
+  <div class="pad">
+    <div class="tbtn" data-k="ArrowLeft">◀</div>
+    <div class="tbtn" data-k="ArrowUp">▲</div>
+    <div class="tbtn" data-k="ArrowDown">▼</div>
+    <div class="tbtn" data-k="ArrowRight">▶</div>
+  </div>
+  <div class="act"><div class="tbtn" data-k="z">Z</div></div>
+</div>
+
+<!-- BATALLA -->
+<div class="battle" id="battle" aria-hidden="true">
+  <div class="bt-enemy">
+    <div id="enemySprite"></div>
+    <div class="ename" id="enemyName">EL STAKEHOLDER</div>
+  </div>
+  <div class="bt-bars">
+    <span>HP <span id="hpTxt">40/40</span></span>
+    <span class="bar"><i id="hpFill"></i></span>
+    <span>ACUERDO</span>
+    <span class="bar mercy"><i id="mercyFill" style="width:0%"></i></span>
+  </div>
+  <div class="bt-stage">
+    <div class="bt-dialog" id="btDialog"></div>
+    <canvas id="btcanvas" width="480" height="170" aria-label="Esquiva los tickets"></canvas>
+  </div>
+  <div class="bt-menu" id="btMenu"></div>
+  <div class="bt-tip" id="btTip">← → eliges · Z confirma</div>
+</div>
+
+<script>
+/* ===== paleta + sprites ===== */
+const PAL={'.':null,'k':'#1a1c2c','w':'#ffffff','r':'#ff0000','o':'#ef7d57','y':'#ffd800',
+  'g':'#33cc33','l':'#a7f070','t':'#257179','b':'#3b5dc9','c':'#41a6f6','i':'#73eff7',
+  'p':'#5d275d','s':'#8a8a8a','d':'#566c86','n':'#2a2a3a'};
+function svgSprite(grid,scale){ scale=scale||4; const h=grid.length,w=grid.reduce((m,r)=>Math.max(m,r.length),0); let o='';
+  for(let y=0;y<h;y++){const row=grid[y];for(let x=0;x<row.length;x++){const c=PAL[row[x]];if(!c)continue;
+    o+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>';}}
+  return '<svg viewBox="0 0 '+w+' '+h+'" width="'+(w*scale)+'" height="'+(h*scale)+'" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">'+o+'</svg>'; }
+function drawSprite(ctx,grid,px,py,scale){ for(let y=0;y<grid.length;y++){const row=grid[y];
+  for(let x=0;x<row.length;x++){const c=PAL[row[x]];if(!c)continue; ctx.fillStyle=c; ctx.fillRect(px+x*scale,py+y*scale,scale,scale);}} }
+
+const SPR={
+  soul:['.rr...rr.','rrrrrrrrr','rrrrrrrrr','rrrrrrrrr','.rrrrrrr.','..rrrrr..','...rrr...','....r....'],
+  flag:['............','..w.........','..wrrrrrr...','..wrrrrrrr..','..wrrrrr....','..wrrr......','..w.........','..w.........','..w.........','..w.........','.wwwww......','............'],
+  book:['............','..yyyyyyyy..','.y.wwwwww.y.','.y........y.','.y.wwwwww.y.','.y........y.','.y.wwwwww.y.','.y........y.','.y.wwwwww.y.','.y........y.','..yyyyyyyy..','............'],
+  remote:['.wwwwwwwwww.','.w........w.','.w.iiiiii.w.','.w.iiiiii.w.','.w.iiiiii.w.','.w.iiiiii.w.','.wwwwwwwwww.','.....ww.....','....wwww....','...wwwwww...','............','............'],
+  code:['.wwwwwwwwww.','.w........w.','.w.l......w.','.w..l.....w.','.w...l....w.','.w..l.....w.','.w.l......w.','.w........w.','.w..lll...w.','.wwwwwwwwww.','............','............'],
+  team:['..ww....ww..','.woow..woow.','..ww....ww..','............','.wwww..wwww.','wooowwwooow.','.wwwwwwwww..','wooowwwooow.','.wwww..wwww.','............','............','............'],
+  gear:['...y.yy.y...','...yyyyyy...','..yyy..yyy..','.yy.kkkk.yy.','yy..k..k..yy','yy..k..k..yy','.yy.kkkk.yy.','..yyy..yyy..','...yyyyyy...','...y.yy.y...','............','............'],
+  globe:['...wwwww....','..wcccccw...','.wcllcccw...','.wllcccclw..','wclccgglccw.','wcccgggclcw.','wclcccgllcw.','.wccllcccw..','.wcccclccw..','..wcccccw...','...wwwww....','............'],
+  shield:['...wwwww....','..wyyyyyw...','.wyyyyyyyw..','.wyy.y.yyw..','.wy.yyy.yw..','.wyy.y.yyw..','.wyyyyyyyw..','..wyyyyyw...','...wyyyw....','....www.....','............','............'],
+  heart:['............','..gg..gg....','.gggggggg...','.gggggggg...','.gggggggg...','.gggggggg...','..gggggg....','...gggg.....','....gg......','............','............','............'],
+  star:['....y....','....y....','..yyyyy..','yyyyyyyyy','..yyyyy..','.yy.y.yy.','.y.....y.'],
+  door:['..wwwwwwww..','.w........w.','.w........w.','.w........w.','.w........w.','.w...yy...w.','.w........w.','.w........w.','.w........w.','.wwwwwwwwww.'],
+  frisk_idle:['...kkkkkk...','..kkkkkkkk..','..kkoooork..','..koooooik..','..kooooook..','...oooooo...','..bbppbbpp..','.bbppbbppbb.','.boppbbppob.','..bbppbbpp..','...b....b...','...o....o...','..kk....kk..','..kk....kk..'],
+  frisk_walk:['...kkkkkk...','..kkkkkkkk..','..kkoooork..','..koooooik..','..kooooook..','...oooooo...','..bbppbbpp..','.bbppbbppbb.','.boppbbppob.','..bbppbbpp..','...b....b...','..o......o..','.kk......k..','.........kk.'],
+  boss:['................','....dddddddd....','...doooooooood..','..doooooooooood.','..dowwoooowwod..','..dowkoooowkod..','..doooooooooood.','..dooowwwwooood.','...doooooooood..','....ddwwwwdd....','...dddrrrrddd...','..ddddrrrrdddd..','..dddrrrrrrddd..','..ddddrrrrdddd..','...dddddddddd...','................']
+};
+
+/* ===== ETAPAS (overworld). Textos casuales, primera persona =====
+   👇 EDITA AQUÍ. icon: cualquier clave de SPR */
+const STAGES=[
+  { label:'inicio', icon:'flag', name:'El comienzo',
+    lines:['Entré sin saber muy bien en qué me metía.','El primer "Hola Mundo" me tomó horas. Hoy me da risa.'] },
+  { label:'fundamentos', icon:'book', name:'Fundamentos',
+    lines:['Mucha lógica, matemáticas y diagramas al principio.','Pesado, pero ahí caché cómo se piensa todo esto.'] },
+  { label:'a distancia', icon:'remote', name:'Educación a distancia',
+    lines:['Las clases se mudaron a una pestaña del navegador.','Lo difícil no fue la tecnología, fue organizarme solo.'] },
+  { label:'primer proyecto', icon:'gear', name:'Mi primer proyecto',
+    lines:['Armé algo de cero y por fin lo vi funcionando.','Feo por dentro, pero funcionaba. Me sentí capaz.'] },
+  { label:'ahora', icon:'code', name:'Ya trabajo en desarrollo',
+    lines:['Ahora trabajo programando, todavía se me hace raro.','Sigo buscando cosas en Google a diario. Es normal, resulta.'] },
+  { label:'en equipo', icon:'team', name:'Trabajar con otros',
+    lines:['Me di cuenta de que el código es solo una parte.','Hay que entenderse con diseño, negocio y la gente.'] },
+  { label:'osint y gis', icon:'globe', name:'OSINT y GIS',
+    lines:['Ando metido en OSINT y GIS últimamente.','Con datos públicos y mapas se entiende un montón.'] },
+  { label:'seguridad', icon:'shield', name:'Curiosidad y seguridad',
+    lines:['Me picó la curiosidad por la seguridad y los datos.','Entre más entiendo cómo se rompe, mejor lo construyo.'] },
+  { label:'la meta', icon:'heart', name:'Tecnología que sirva',
+    lines:['Al final, lo que quiero es que esto sirva para algo.','Usar la tecnología para ayudar, no solo para entregar.'] }
+];
+
+/* ===== sonido ===== */
+let actx=null, soundOn=true;
+function beep(f,d,t){ if(!soundOn) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain(); o.type=t||'square'; o.frequency.value=f;
+  g.gain.setValueAtTime(.045,actx.currentTime); g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+(d||.06));
+  o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+(d||.06)); }catch(e){} }
+const sMove=()=>beep(300,.04), sPick=()=>beep(520,.06), sHit=()=>beep(120,.12,'sawtooth'),
+  sWin=()=>[392,523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.13),i*110));
+
+/* ===== estado global ===== */
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let mode='hero';
+const keys={};
+
+/* ===== TEXTO con maquina de escribir (compartido) ===== */
+function typeInto(el,lines,done){ if(el._t) clearInterval(el._t);
+  const str=Array.isArray(lines)? lines.map(l=>'* '+l).join('\n') : lines;
+  if(reduce){ el.textContent=str; if(done)done(); return; }
+  el.innerHTML=''; let i=0; const car=document.createElement('span'); car.className='caret'; car.textContent='▮'; el.appendChild(car);
+  el._t=setInterval(()=>{ if(i>=str.length){ clearInterval(el._t); car.remove(); if(done)done(); return; }
+    car.insertAdjacentText('beforebegin',str[i]); i++; if(str[i-1]!=='\n'&&i%2===0) beep(420,.012); },22); }
+
+/* ===== OVERWORLD ===== */
+const world=document.getElementById('world'), owEl=document.getElementById('overworld');
+const tbPortrait=document.getElementById('tbPortrait'), tbName=document.getElementById('tbName'), tbText=document.getElementById('tbText');
+document.getElementById('titleSoul').innerHTML=svgSprite(SPR.soul,3);
+
+const GAP=300, START=170;
+const markers=STAGES.map((s,i)=>({...s, x:START+i*GAP, seen:false, el:null}));
+const doorX=START+STAGES.length*GAP+40;
+const worldW=doorX+200;
+world.style.width=worldW+'px';
+
+// crear marcadores + puerta + frisk
+markers.forEach((m,i)=>{
+  const d=document.createElement('div'); d.className='marker'; d.style.left=m.x+'px';
+  d.innerHTML='<div class="star">'+svgSprite(SPR.star,4)+'</div><div class="mlabel">'+m.label+'</div>';
+  world.appendChild(d); m.el=d;
+});
+const doorEl=document.createElement('div'); doorEl.className='door'; doorEl.style.left=doorX+'px';
+doorEl.innerHTML='<div>'+svgSprite(SPR.door,4)+'</div><div class="dlabel">EL FINAL ▶</div>';
+world.appendChild(doorEl);
+
+const frisk=document.createElement('div'); frisk.id='frisk'; frisk.innerHTML=svgSprite(SPR.frisk_idle,4);
+world.appendChild(frisk);
+
+let friskX=60, facing=1, walkFrame=0, walkTick=0, owActive=false, battleDone=false;
+function placeFrisk(){
+  frisk.style.left=(friskX-24)+'px';
+  frisk.style.transform='scaleX('+facing+')';
+  const vw=owEl.clientWidth;
+  let cam=-(friskX - vw/2);
+  cam=Math.min(0, Math.max(-(worldW-vw), cam));
+  world.style.transform='translateX('+cam+'px)';
+}
+function nearestMarker(){ for(const m of markers){ if(Math.abs(friskX-m.x)<46) return m; } return null; }
+function showStage(m){
+  tbPortrait.innerHTML=svgSprite(SPR[m.icon],4);
+  tbName.textContent='* '+m.name;
+  typeInto(tbText,m.lines);
+  markers.forEach(x=>x.el.classList.toggle('on',x===m));
+}
+
+let owRAF=null;
+function owLoop(){
+  if(mode!=='overworld'){ owRAF=null; return; }
+  let moving=false;
+  if(keys['ArrowLeft']||keys['a']){ friskX-=3.2; facing=-1; moving=true; }
+  if(keys['ArrowRight']||keys['d']){ friskX+=3.2; facing=1; moving=true; }
+  friskX=Math.max(40, Math.min(worldW-40, friskX));
+  if(moving){ walkTick++; if(walkTick%8===0){ walkFrame^=1; frisk.innerHTML=svgSprite(walkFrame?SPR.frisk_walk:SPR.frisk_idle,4); } }
+  else if(frisk._idle!==1){ frisk.innerHTML=svgSprite(SPR.frisk_idle,4); frisk._idle=1; }
+  if(moving) frisk._idle=0;
+  placeFrisk();
+
+  const m=nearestMarker();
+  if(m && !m.seen){ markers.forEach(x=>x.seen=(x===m? true:x.seen)); m.seen=true; showStage(m); sPick(); }
+  if(!battleDone && friskX>=doorX-30){ startBattle(); }
+  owRAF=requestAnimationFrame(owLoop);
+}
+function startOverworld(){
+  mode='overworld'; owActive=true;
+  document.querySelector('.ow-head').scrollIntoView({behavior:reduce?'auto':'smooth', block:'center'});
+  tbName.textContent='*'; typeInto(tbText,['Usa las flechas para caminar hacia la derecha.']);
+  placeFrisk();
+  if(!owRAF) owLoop();
+}
+
+/* ===== BATALLA ===== */
+const battleEl=document.getElementById('battle'), btDialog=document.getElementById('btDialog'),
+  btMenu=document.getElementById('btMenu'), canvas=document.getElementById('btcanvas'), ctx=canvas.getContext('2d');
+document.getElementById('enemySprite').innerHTML=svgSprite(SPR.boss,7);
+let hp=40, hpMax=40, mercy=0, btPhase='dialog', menuIdx=0, curMenu=[], actsDone=0;
+
+function setBars(){ document.getElementById('hpTxt').textContent=hp+'/'+hpMax;
+  document.getElementById('hpFill').style.width=Math.max(0,hp/hpMax*100)+'%';
+  document.getElementById('mercyFill').style.width=Math.min(100,mercy)+'%'; }
+
+let dlgTyping=false, dlgWaitZ=true, dlgFull='', dlgPending=null;
+function showArrow(){ if(btDialog.querySelector('.dadv')) return;
+  const a=document.createElement('span'); a.className='dadv'; a.textContent='  ▼'; a.style.color='var(--gold)';
+  a.style.animation='blink 1s steps(2) infinite'; btDialog.appendChild(a); }
+function hideArrow(){ const a=btDialog.querySelector('.dadv'); if(a) a.remove(); }
+function runPending(){ hideArrow(); const cb=dlgPending; dlgPending=null; if(cb) cb(); }
+function dlgAdvance(){
+  if(dlgTyping){ if(btDialog._t) clearInterval(btDialog._t); btDialog.textContent=dlgFull; dlgTyping=false;
+    if(dlgWaitZ) showArrow(); else runPending(); return; }
+  if(dlgWaitZ) runPending();
+}
+// boss/narrative dialogue: stays until you press Z (waitZ defaults true)
+function btSay(lines,then,waitZ){ btPhase='dialog'; canvas.style.display='none'; btDialog.style.display='block';
+  renderMenu([]); hideArrow();
+  dlgWaitZ=(waitZ!==false); dlgFull=Array.isArray(lines)?lines.map(l=>'* '+l).join('\n'):lines; dlgPending=then||null; dlgTyping=true;
+  typeInto(btDialog,lines,()=>{ dlgTyping=false; if(dlgWaitZ) showArrow(); else runPending(); }); }
+
+function renderMenu(items){ curMenu=items; menuIdx=0; btMenu.innerHTML='';
+  items.forEach((it,i)=>{ const b=document.createElement('button'); b.className='bt-btn'+(it.lit?' lit':'');
+    b.innerHTML='<span class="ico"></span>'+it.t; b.addEventListener('click',()=>{ menuIdx=i; paintBtMenu(); it.a(); sPick(); });
+    btMenu.appendChild(b); });
+  paintBtMenu(); }
+const btSoul=document.createElement('span'); btSoul.innerHTML=svgSprite(SPR.soul,3);
+function paintBtMenu(){ const bs=btMenu.querySelectorAll('.bt-btn'); bs.forEach((b,i)=>b.classList.toggle('active',i===menuIdx));
+  if(bs[menuIdx]) bs[menuIdx].querySelector('.ico').appendChild(btSoul); }
+
+function mainMenu(){
+  btSay(['¿Qué haces?'], ()=>{ btPhase='menu';
+    const merciable = mercy>=100;
+    renderMenu([
+      {t:'ACTUAR', a:actMenu},
+      {t:'CAFÉ', a:useCoffee},
+      {t:'IMPONER', a:doFight},
+      {t:'PERDONAR'+(merciable?' ✓':''), lit:merciable, a:doMercy}
+    ]);
+  }, false);
+}
+function actMenu(){
+  btSay(['El STAKEHOLDER te mira fijo, esperando.'], ()=>{ btPhase='menu';
+    renderMenu([
+      {t:'ESCUCHAR', a:()=>act('escuchar')},
+      {t:'NEGOCIAR', a:()=>act('negociar')},
+      {t:'PROPONER MVP', a:()=>act('mvp')},
+      {t:'REVISAR', a:()=>act('revisar')},
+      {t:'◀ VOLVER', a:mainMenu}
+    ]);
+  }, false);
+}
+const ACTS={
+  escuchar:{ m:40, line:['Lo escuchas de verdad.','"Ah... entonces sí me entendiste." Se relaja un poco.'] },
+  negociar:{ m:35, line:['Propones un alcance realista.','"Mmm... podría aceptar eso." Baja la guardia.'] },
+  mvp:{ m:45, line:['Sugieres empezar por un MVP.','"¿Algo que funcione ya? ...me gusta." Casi sonríe.'] },
+  revisar:{ m:0, line:['STAKEHOLDER - ATK 99 DEF 2','Pide "solo un botón más". Lleva 47 botones.'] }
+};
+function act(k){ const a=ACTS[k]; mercy=Math.min(100,mercy+a.m); if(a.m>0) actsDone++; setBars();
+  btSay(a.line, enemyTurn); }
+function useCoffee(){ hp=Math.min(hpMax,hp+15); setBars(); btSay(['Te tomas un café.','+15 HP. Ahora sí.'], enemyTurn); }
+function doFight(){ mercy=Math.max(0,mercy-20); setBars(); btSay(['Intentas imponer tu idea a la fuerza.','No funciona así. Se cierra más.'], enemyTurn); }
+function doMercy(){ if(mercy>=100){ winBattle(); }
+  else{ btSay(['Ofreces parar aquí.','"Todavía quiero más features." (Falta acuerdo.)'], enemyTurn); } }
+
+function winBattle(){ btPhase='win'; canvas.style.display='none'; mercy=100; setBars(); sWin();
+  renderMenu([]);
+  btSay(['Llegaron a un alcance realista.','El STAKEHOLDER respira tranquilo.','No lo venciste: lo entendiste.','* Te llenas de DETERMINACIÓN.'], ()=>{
+    btPhase='menu';
+    document.getElementById('btTip').textContent='Acuerdo cerrado ✓ — Z para continuar';
+    renderMenu([{t:'CONTINUAR ▶', a:endBattle}]);
+  }); }
+function endBattle(){ battleEl.classList.remove('show'); battleDone=true; mode='overworld';
+  document.querySelector('.life').scrollIntoView({behavior:reduce?'auto':'smooth', block:'center'});
+  tbName.textContent='*'; typeInto(tbText,['Y eso es lo que vengo aprendiendo. Sigo en eso.']);
+  if(!owRAF) owLoop(); }
+
+/* --- esquiva (canvas) --- */
+let soul={x:240,y:120}, bullets=[], invuln=0, waveEnd=0, btRAF=null;
+function startWave(ms){ btPhase='dodge'; btDialog.style.display='none'; canvas.style.display='block';
+  renderMenu([]); document.getElementById('btTip').textContent='¡Esquiva! Mueve con las flechas';
+  bullets=[]; soul={x:canvas.width/2,y:canvas.height/2}; invuln=0; waveEnd=performance.now()+ms;
+  let spawnAcc=0, last=performance.now();
+  cancelAnimationFrame(btRAF);
+  (function loop(now){
+    const dt=Math.min(40, now-last); last=now;
+    // mover alma
+    const sp=2.8;
+    if(keys['ArrowLeft']||keys['a']) soul.x-=sp*dt/16;
+    if(keys['ArrowRight']||keys['d']) soul.x+=sp*dt/16;
+    if(keys['ArrowUp']||keys['w']) soul.y-=sp*dt/16;
+    if(keys['ArrowDown']||keys['s']) soul.y+=sp*dt/16;
+    soul.x=Math.max(10,Math.min(canvas.width-10,soul.x));
+    soul.y=Math.max(10,Math.min(canvas.height-10,soul.y));
+    // spawn
+    spawnAcc+=dt; if(spawnAcc>340){ spawnAcc=0; spawnBullet(); }
+    // update bullets
+    bullets.forEach(b=>{ b.x+=b.vx*dt/16; b.y+=b.vy*dt/16; });
+    bullets=bullets.filter(b=> b.x>-30&&b.x<canvas.width+30&&b.y>-30&&b.y<canvas.height+30);
+    if(invuln>0) invuln-=dt;
+    // colision
+    for(const b of bullets){ if(invuln<=0 && Math.abs(b.x-soul.x)<8+b.s/2 && Math.abs(b.y-soul.y)<8+b.s/2){
+      hp=Math.max(0,hp-2); invuln=700; sHit(); setBars();
+      if(hp<=0){ hp=hpMax; setBars(); } } }
+    // dibujar
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#fff'; bullets.forEach(b=>ctx.fillRect(b.x-b.s/2,b.y-b.s/2,b.s,b.s));
+    const sc=2; if(!(invuln>0 && Math.floor(invuln/90)%2)) drawSprite(ctx,SPR.soul,soul.x-4.5*sc,soul.y-4*sc,sc);
+    if(now<waveEnd){ btRAF=requestAnimationFrame(loop); }
+    else{ ctx.clearRect(0,0,canvas.width,canvas.height); afterWave(); }
+  })(performance.now());
+}
+function spawnBullet(){ const side=Math.floor(Math.random()*3); const s=10+Math.random()*6; let b={s};
+  if(side===0){ b.x=Math.random()*canvas.width; b.y=-10; b.vx=0; b.vy=1.6+Math.random()*1.2; }
+  else if(side===1){ b.x=-10; b.y=Math.random()*canvas.height; b.vx=1.6+Math.random()*1.2; b.vy=0; }
+  else{ b.x=canvas.width+10; b.y=Math.random()*canvas.height; b.vx=-(1.6+Math.random()*1.2); b.vy=0; }
+  bullets.push(b); }
+function enemyTurn(){ startWave(6000); }
+function afterWave(){ if(mercy>=100){ btSay(['El STAKEHOLDER ya está de acuerdo.','Puedes PERDONAR.'], mainMenu); }
+  else mainMenu(); }
+
+function startBattle(){ if(battleDone||mode==='battle') return; mode='battle';
+  battleEl.classList.add('show'); hp=hpMax; mercy=0; actsDone=0; setBars();
+  btSay(['Una figura bloquea el pasillo.','* EL STAKEHOLDER aparece.','"Necesito 12 features... para ayer."'], mainMenu); }
+
+/* ===== controles ===== */
+document.getElementById('startBtn').addEventListener('click',()=>{ sPick(); startOverworld(); });
+document.getElementById('topBtn').addEventListener('click',()=>{ document.getElementById('top').scrollIntoView({behavior:reduce?'auto':'smooth'}); });
+const muteBtn=document.getElementById('muteBtn');
+muteBtn.addEventListener('click',()=>{ soundOn=!soundOn; muteBtn.textContent=soundOn?'♪ ON':'♪ OFF'; if(soundOn) sPick(); });
+
+function moveMenu(dir){ if(!curMenu.length) return; menuIdx=(menuIdx+dir+curMenu.length)%curMenu.length; paintBtMenu(); sMove(); }
+function confirmMenu(){ if(curMenu[menuIdx]){ curMenu[menuIdx].a(); sPick(); } }
+
+document.addEventListener('keydown',(e)=>{
+  const k=e.key;
+  if((mode==='overworld'||mode==='battle') && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(k)) e.preventDefault();
+  keys[k]=true;
+  if(mode==='battle' && btPhase==='menu'){
+    if(k==='ArrowRight'||k==='ArrowDown') moveMenu(1);
+    else if(k==='ArrowLeft'||k==='ArrowUp') moveMenu(-1);
+    else if(k==='z'||k==='Z'||k==='Enter') confirmMenu();
+  } else if(mode==='battle' && btPhase==='dialog'){
+    if(k==='z'||k==='Z'||k==='Enter') dlgAdvance();
+  }
+});
+document.addEventListener('keyup',(e)=>{ keys[e.key]=false; });
+btDialog.addEventListener('click',()=>{ if(mode==='battle'&&btPhase==='dialog') dlgAdvance(); });
+
+// controles tactiles
+document.querySelectorAll('#touch .tbtn').forEach(btn=>{
+  const k=btn.dataset.k;
+  const on=(ev)=>{ ev.preventDefault(); keys[k]=true;
+    if(mode==='battle'&&btPhase==='menu'){ if(k==='ArrowRight'||k==='ArrowDown')moveMenu(1); else if(k==='ArrowLeft'||k==='ArrowUp')moveMenu(-1); else if(k==='z')confirmMenu(); }
+    else if(mode==='battle'&&btPhase==='dialog'){ if(k==='z')dlgAdvance(); } };
+  const off=(ev)=>{ ev.preventDefault(); keys[k]=false; };
+  btn.addEventListener('touchstart',on,{passive:false}); btn.addEventListener('touchend',off,{passive:false});
+  btn.addEventListener('mousedown',on); btn.addEventListener('mouseup',off); btn.addEventListener('mouseleave',off);
+});
+
+/* arranque: mostrar primera etapa en la caja */
+tbName.textContent='*'; typeInto(tbText,['Presiona EMPEZAR y camina con las flechas.']);
+</script>
+</body>
+</html>
